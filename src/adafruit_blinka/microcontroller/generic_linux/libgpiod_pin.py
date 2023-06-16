@@ -58,60 +58,40 @@ class Pin:
         if mode is not None:
             if mode == self.IN:
                 flags = 0
+                self._mode = self.IN
                 self._line.release()
-                if pull is not None:
-                    if pull == self.PULL_UP:
-                        if hasattr(gpiod, "line") and hasattr(
-                            gpiod.line, "BIAS_PULL_UP"
-                        ):
-                            config = gpiod.line_request()
-                            config.consumer = self._CONSUMER
-                            config.request_type = gpiod.line.BIAS_PULL_UP
-                            self._line.request(config)
-                        else:
-                            self._line.request(
-                                consumer=self._CONSUMER,
-                                type=gpiod.LINE_REQ_DIR_IN,
-                                flags=flags,
-                            )
-                            raise NotImplementedError(
-                                "Internal pullups not supported in this version of libgpiod, "
-                                "use physical resistor instead!"
-                            )
-                    elif pull == self.PULL_DOWN:
-                        if hasattr(gpiod, "line") and hasattr(
-                            gpiod.line, "BIAS_PULL_DOWN"
-                        ):
-                            config = gpiod.line_request()
-                            config.consumer = self._CONSUMER
-                            config.request_type = gpiod.line.BIAS_PULL_DOWN
-                            self._line.request(config)
-                        else:
+                if hasattr(gpiod, "LINE_REQ_DIR_IN"):
+                    if pull is not None:
+                        if not hasattr(gpiod, "LINE_REQ_FLAG_BIAS_PULL_UP"):
                             raise NotImplementedError(
                                 "Internal pulldowns not supported in this version of libgpiod, "
                                 "use physical resistor instead!"
                             )
-                    elif pull == self.PULL_NONE:
-                        if hasattr(gpiod, "line") and hasattr(
-                            gpiod.line, "BIAS_DISABLE"
-                        ):
-                            config = gpiod.line_request()
-                            config.consumer = self._CONSUMER
-                            config.request_type = gpiod.line.BIAS_DISABLE
-                            self._line.request(config)
-                    else:
-                        raise RuntimeError(f"Invalid pull for pin: {self.id}")
-
-                self._mode = self.IN
-                self._line.release()
-                if hasattr(gpiod, "LINE_REQ_DIR_IN"):
+                        if pull == self.PULL_UP:
+                            flags = gpiod.LINE_REQ_FLAG_BIAS_PULL_UP
+                        elif pull == self.PULL_DOWN:
+                            flags = gpiod.LINE_REQ_FLAG_BIAS_PULL_DOWN
+                        elif pull == self.PULL_NONE:
+                            flags = gpiod.LINE_REQ_FLAG_BIAS_DISABLE
+                        else:
+                            raise RuntimeError(f"Invalid pull for pin: {self.id}")
                     self._line.request(
                         consumer=self._CONSUMER, type=gpiod.LINE_REQ_DIR_IN, flags=flags
                     )
                 else:
+                    if pull is not None:
+                        if pull == self.PULL_UP:
+                            flags = gpiod.line_request.FLAG_BIAS_PULL_UP
+                        elif pull == self.PULL_DOWN:
+                            flags = gpiod.line_request.FLAG_BIAS_PULL_DOWN
+                        elif pull == self.PULL_NONE:
+                            flags = gpiod.line_request.FLAG_BIAS_DISABLE
+                        else:
+                            raise RuntimeError(f"Invalid pull for pin: {self.id}")
                     config = gpiod.line_request()
                     config.consumer = self._CONSUMER
                     config.request_type = gpiod.line_request.DIRECTION_INPUT
+                    config.flags = flags
                     self._line.request(config)
 
             elif mode == self.OUT:
