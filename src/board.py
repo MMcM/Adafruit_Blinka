@@ -328,6 +328,12 @@ elif board_id == ap_board.KB2040_U2IF:
 elif board_id == ap_board.LICHEE_RV:
     from adafruit_blinka.board.lichee_rv import *
 
+elif board_id == ap_board.MANGOPI_MQ_PRO:
+    from adafruit_blinka.board.mangopi.mq_pro import *
+
+elif board_id == ap_board.MANGOPI_MQ_QUAD:
+    from adafruit_blinka.board.mangopi.mq_quad import *
+
 elif board_id == ap_board.SIEMENS_SIMATIC_IOT2050_ADV:
     from adafruit_blinka.board.siemens.siemens_iot2050 import *
 
